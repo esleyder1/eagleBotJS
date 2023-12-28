@@ -10,34 +10,46 @@ let confirmName = false;
 let confirmAddress = false;
 let customerAddress = ""
 
-function getMessage(type, user) {
+function getMsg(type, user) {
   const userName = user?.name || "User"
   const userLang = user?.lang || "en"
   const messages = {
     es: {
-      farewell: "¡Hasta luego! Esperamos verte pronto",
-      greeting: `¡Hola! *${userName}*, elige el servicio que deseas`,
+      addressDetected: 'La dirección detectada es, ',
+      confirmAddress: 'Comparte tu ubicación desde WhatsApp nuevamente.',
+      confirmName: 'confirma tu nombre.',
+      farewell: "¡Hasta luego! Esperamos verte pronto.",
+      greeting: `¡Hola! *${userName}*, elige el servicio que deseas.`,
       langList: ["Inglés 🇺🇸", "Español 🇪🇸"],
+      msgNotFound: 'Mensaje no reconocido',
       msgUnknown: "¡Hola! Parece que mi entrenamiento me hace un poco despistado a veces 😅. ¿Cómo puedo ayudarte hoy?",
       optionsList: ["✅ Confirmar", "📝 Modificar"],
-      service: "Gracias por utilizar nuestro servicio",
+      service: "Gracias por utilizar nuestro servicio.",
       servicesList: ["Taxi 🚕", "Comida 🍔"],
-      shareLocation: `¡Hola! *${userName}*, comparte tu ubicación desde WhatsApp`,
-      verifyAddress: "Verifica por favor la dirección ingresada",
-      welcome: "HOla, soy EagleBot, para iniciar, ingresa tu nombre"
+      shareLocation: `¡Hola! *${userName}*, comparte tu ubicación desde WhatsApp.`,
+      undetectedAddress: 'No se pudo obtener la dirección, intenta nuevamente',
+      unrecognizedMsg: 'Mensaje no reconocido',
+      verifyAddress: "Verifica por favor la dirección ingresada.",
+      welcome: "HOla, soy EagleBot, para iniciar, ingresa tu nombre."
     },
     en: {
-      farewell: "Goodbye! We hope to see you again soon",
-      greeting: `Hello! *${userName}*, choose the service you want`,
+      addressDetected: 'The detected address is, ',
+      confirmAddress: 'Share your location from WhatsApp again.',
+      confirmName: 'confirm your name.',
+      farewell: "Goodbye! We hope to see you again soon.",
+      greeting: `Hello! *${userName}*, choose the service you want.`,
       langList: ["English 🇺🇸", "Spanish 🇪🇸"],
+      msgNotFound: 'Message not found',
       msgUnknown: "Hello! It seems like my training makes me a little absent-minded sometimes 😅. How can I help you today?",
       optionsList: ["✅ Confirm", "📝 Modify"],
-      service: "Thank you for using our service",
+      service: "Thank you for using our service.",
       servicesList: ["Taxi 🚕", "Food 🍔"],
-      shareLocation: `Hello! *${userName}*, share your location from WhatsApp`,
-      verifyAddress: "Please verify the address entered",
-      welcome: `Hello, I'm EagleBot, to get started, enter your name`
-    },
+      shareLocation: `Hello! *${userName}*, share your location from WhatsApp.`,
+      undetectedAddress: 'Unable to retrieve the address, try again.',
+      unrecognizedMsg: 'Unrecognized message',
+      verifyAddress: "Please verify the address entered.",
+      welcome: `Hello, I'm EagleBot, to get started, enter your name.`
+    }
   }
   const userMessages = messages[userLang] || messages["en"];
   return userMessages[type] || "Message not found"
@@ -54,40 +66,43 @@ function startConversation(number, message, messageId) {
   let list = [];
   let markRead = markReadMessage(messageId)
   list.push(markRead)
-  const greetingKeywords = {
+  const greetings = {
     english: ["hello","hi","hey","good morning","good afternoon","good evening","greetings","hey there","hi there","welcome","hello there","morning","howdy","hi everyone"],
-    spanish: ["hola","buenos días","buenas tardes","buenas noches","saludos","qué tal","bienvenido","hola qué tal","buen día","salutaciones","hola a todos"],
+    spanish: ["hola","buenos días","buenas tardes","buenas noches","saludos","qué tal","bienvenido","hola qué tal","buen día","salutaciones","hola a todos"]
   }
-  const changeDirectionKeywords = ["taxi", "comida"];
+  const services = {
+    english: ["trip", "transfer", "transport", "driver", "car", "automobile", "mobility", "order", "restaurant", "deliver", "delivery", "menu", "lunch", "dinner", "fast", "taxi", "food"],
+    spanish: ["viaje", "traslado", "transporte", "conductor", "coche", "automóvil", "movilidad","pedido", "restaurante", "entregar", "envío", "menú", "almuerzo", "cena", "rápido","taxi","comida"]
+  }
   let user = findUserByPhone(number)
   if (isFirstGreeting) {
-    const containsGreeting = Object.values(greetingKeywords).some((keywords) => keywords.some((greeting) => message.toLowerCase().includes(greeting.toLowerCase())))
-    const shouldChangeDirection = changeDirectionKeywords.some((keyword) => message.toLowerCase().includes(keyword.toLowerCase()))
+    const containsGreeting = Object.values(greetings).some((keywords) => keywords.some((greeting) => message.toLowerCase().includes(greeting.toLowerCase())))
+    const containService = Object.values(services).some((keywords) => keywords.some((service) => message.toLowerCase().includes(service.toLowerCase())))
     if (containsGreeting) {
       if (user) {
-        let body = getMessage("greeting", user)
-        let options = getMessage("servicesList", user)
+        let body = getMsg("greeting", user)
+        let options = getMsg("servicesList", user)
         let replyButtonData = buttonReplyMessage(number,options,body,"sed5",messageId)
         list.push(replyButtonData)
       } else {
-        let textMsg = textMessage(number, getMessage("welcome"))
+        let textMsg = textMessage(number, getMsg("welcome"))
         sendMsgWhatsapp(textMsg)
         requestName = true
       }
       list.forEach((item) => {sendMsgWhatsapp(item)})
       isFirstGreeting = false;
-    } else if (shouldChangeDirection) {
+    } else if (containService) {
       if (user) {
-        let textMsg = textMessage(number,getMessage("shareLocation", user))
+        let textMsg = textMessage(number,getMsg("shareLocation", user))
         sendMsgWhatsapp(textMsg)
       } else {
-        let textMsg = textMessage(number, getMessage("welcome"))
+        let textMsg = textMessage(number, getMsg("welcome"))
         sendMsgWhatsapp(textMsg)
         requestName = true
       }
       isFirstGreeting = false;
     } else {
-      let textMsg = textMessage(number, getMessage("msgUnknown"))
+      let textMsg = textMessage(number, getMsg("msgUnknown"))
       sendMsgWhatsapp(textMsg)
       isFirstGreeting = true;
     }
@@ -103,17 +118,17 @@ async function adminChatbot(text, number, messageId, name, session) {
     } else {
       if (requestName) {
         let customerName = `*${text.charAt(0).toUpperCase() + text.slice(1)}*`
-        let body = `${customerName} confirma tu nombre`;
-        let options = getMessage("optionsList")
+        let body = customerName + getMsg('confirmName');
+        let options = getMsg('optionsList')
         let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
         list.push(replyButtonData)
         requestName = false;
         confirmName = true;
-      } else if (text.includes("dirección")) {
+      } else if (text.includes('dirección')) {
         let textMsg = textMessage(number, text)
         sendMsgWhatsapp(textMsg)
-        let bodyConf = "Verifica por favor la dirección ingresada"
-        let optionsConf = getMessage("optionsList")
+        let bodyConf = getMsg('verifyAddress')
+        let optionsConf = getMsg('optionsList')
         let replyButtonDataConf = buttonReplyMessage(number,optionsConf,bodyConf,"sed1",messageId)
         list.push(replyButtonDataConf)
         confirmAddress = true;
@@ -125,12 +140,11 @@ async function adminChatbot(text, number, messageId, name, session) {
             "Tiempo Estimado: 15 minutos\n" +
             "Conductor: JUAN MONTOYA\n" +
             "Empresa de transporte: TAXI LAS AGUILAS"
-
           let textMessageName = textMessage(number, response)
           sendMsgWhatsapp(textMessageName)
           confirmAddress = false;
         } else if (text.includes("modificar")) {
-          let textMessageName = textMessage(number,"Comparte tu ubicación desde WhatsApp nuevamente.")
+          let textMessageName = textMessage(number, getMsg('confirmAddress'))
           sendMsgWhatsapp(textMessageName)
         }
       }
@@ -140,16 +154,16 @@ async function adminChatbot(text, number, messageId, name, session) {
 }
 async function getWspMessage(message) {
   let text;
-  if (!("type" in message)) {text = "Unrecognized message"; return text} const typeMessage = message["type"];
+  if (!("type" in message)) {text = getMsg('unrecognizedMsg'); return text} const typeMessage = message["type"];
   if (typeMessage === "text") { text = message["text"]["body"]}
   else if (typeMessage === "location") {
     const latitude = message["location"]["latitude"]
     const longitude = message["location"]["longitude"]
     const address = await getAddress(latitude, longitude)
     if (address) {customerAddress = address;
-      text = `La dirección detectada es, *${address}*`;
+      text = `${getMsg('addressDetected')}*${address}*`
     } else {
-      text = "Unable to retrieve the address."
+      text = getMsg('undetectedAddress')
     }
   } else if (typeMessage === "button") {text = message["button"]["text"]
   } else if (typeMessage === "interactive" && message["interactive"]["type"] === "list_reply") {text = message["interactive"]["list_reply"]["title"]
@@ -177,7 +191,7 @@ function buttonReplyMessage(number, options, body, sedd, messageId) {
 }
 function listReplyMessage(number, options, body, sedd, messageId) {
   const rows = options.map((option, i) => ({id: sedd + "_row_" + (i + 1),title: option,description: ""}))
-  return JSON.stringify({messaging_product: "whatsapp",recipient_type: "individual",to: number,type: "interactive",interactive: {type: "list",body: {text: body},action: {button: "Ver Opciones",sections: [{title: "Secciones",rows: rows}]}}})
+  return JSON.stringify({messaging_product: "whatsapp",recipient_type: "individual",to: number,type: "interactive",interactive: {type: "list",body: {text: body},action: {button: "show options",sections: [{title: "Secciones",rows: rows}]}}})
 }
 function stickerMessage(number, stickerId) {return JSON.stringify({messaging_product: "whatsapp",recipient_type: "individual",to: number,type: "sticker",sticker: {id: stickerId}})}
 function getMediaId(mediaName, mediaType) {

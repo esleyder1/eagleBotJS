@@ -27,6 +27,7 @@ function getMsg(type, user) {
     es: {
       addressDetected: 'La dirección detectada es, ',
       assignedService: "Tu servicio ha sido asignado con los siguientes datos:",
+      cancelService: 'Tu Servicio ha sido Cancelado',
       confirmAddress: 'Comparte tu ubicación desde WhatsApp nuevamente.',
       confirmName: 'confirma tu nombre.',
       driverName: 'Conductor: ',
@@ -54,6 +55,7 @@ function getMsg(type, user) {
     en: {
       addressDetected: 'The detected address is, ',
       assignedService: "Your service has been assigned with the following data:",
+      cancelService: "Your service has been canceled.",
       confirmAddress: 'Share your location from WhatsApp again.',
       confirmName: 'confirm your name.',
       driverName: 'Driver: ',
@@ -86,7 +88,7 @@ function findUserByPhone(phone) {
   const customerData = {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
-    5732427962189: { name: "Maria", age: 28, city: "City C", lang: "en" },
+    573242796218: { name: "Maria", age: 28, city: "City C", lang: "en" },
   };
   return customerData[phone];
 }
@@ -99,27 +101,27 @@ function startConversation(number, message, messageId) {
     es: ["hola","buenos días","buenas tardes","buenas noches","saludos","qué tal","bienvenido","hola qué tal","buen día","salutaciones","hola a todos"]
   }
   const services = {
-    english: ["trip", "transfer", "transport", "driver", "car", "automobile", "mobility", "order", "restaurant", "deliver", "delivery", "menu", "lunch", "dinner", "fast", "taxi", "food"],
-    spanish: ["viaje", "traslado", "transporte", "conductor", "coche", "automóvil", "movilidad","pedido", "restaurante", "entregar", "envío", "menú", "almuerzo", "cena", "rápido","taxi","comida"]
+    en: ["vehicle", "trip", "transfer", "transport", "driver", "car", "automobile", "mobility", "order", "restaurant", "deliver", "delivery", "menu", "lunch", "dinner", "fast", "taxi", "food"],
+    es: ["vehiculo", "viaje", "traslado", "transporte", "conductor", "coche", "automóvil", "movilidad","pedido", "restaurante", "entregar", "envío", "menú", "almuerzo", "cena", "rápido","taxi","comida"]
   }
   let user = findUserByPhone(number)
   if (isFirstGreeting) {
-
-  const foundGreeting = Object.entries(greetings).some(([lang, keywords]) => {
-      if (keywords.some((greeting) => message.toLowerCase().includes(greeting.toLowerCase()))) {
-          userLang = lang
-          nativeLang = true
-          return true;
-      }
-      return false;
-  });
-  const foundService = Object.entries(services).some(([lang, keywords]) => {
-    if (keywords.some((service) => message.toLowerCase().includes(service.toLowerCase()))) {
+    
+    let foundGreeting = Object.entries(greetings).some(([lang, greetingsList]) => {
+      if (greetingsList.some(greeting => greeting.toLowerCase().includes(message.toLowerCase()))) {
         userLang = lang;
         return true;
-    }
-    return false;
-});
+      }
+      return false;
+    });
+    const foundService = Object.entries(services).some(([lang, servicesList]) => {
+      if (servicesList.some(service => service.toLowerCase().includes(message.toLowerCase()))) {
+        userLang = lang;
+        foundGreeting = false
+        return true;
+      }
+      return false;
+    });
     if (foundGreeting) {
       if (user) {
         let body = getMsg("greeting", user)
@@ -136,7 +138,7 @@ function startConversation(number, message, messageId) {
       isFirstGreeting = false;
     } else if (foundService) {
       if (user) {
-        let textMsg = textMessage(number,getMsg("shareLocationUserName", user))
+        let textMsg = textMessage(number,getMsg("shareLocationUserName",user) + "\n\n" + getMsg("howShareLocation"))
         sendMsgWhatsapp(textMsg)
       } else {
         let textMsg = textMessage(number, getMsg("welcome"))
@@ -302,8 +304,10 @@ async function sendAssignedService(customerAddress, number) {
       getMsg('driverName') + "JUAN MONTOYA\n" +
       getMsg('transportCompany') + "TAXI LAS AGUILAS";
 
-    let textMessageName = textMessage(number, response);
-    await sendMsgWhatsapp(textMessageName);
+    let textService = textMessage(number, response);
+    await sendMsgWhatsapp(textService);
+    // let textCancel = textMessage(number, getMsg('cancelService'));
+    // await sendMsgWhatsapp(textCancel);
     confirmAddress = false;
   } catch (error) {
     console.error('Error sending assigned service message:', error);

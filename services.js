@@ -26,12 +26,15 @@ function getMsg(type, user) {
   const messages = {
     es: {
       addressDetected: 'La dirección detectada es, ',
+      assignedService: "Tu servicio ha sido asignado con los siguientes datos:",
       confirmAddress: 'Comparte tu ubicación desde WhatsApp nuevamente.',
       confirmName: 'confirma tu nombre.',
       driverName: 'Conductor: ',
       farewell: "¡Hasta luego! Esperamos verte pronto.",
-      greeting: `¡Hola! *${userName}*, elige el servicio que deseas.`,
+      greeting: `Hola👋, *${userName}*, elige el servicio que deseas.`,
+      howShareLocation: 'Presiona 📎, selecciona la opción “ubicación” y “envía tu ubicación actual."',
       langList: ["Inglés 🇺🇸", "Español 🇪🇸"],
+      lookingForVehicle: `*${userName}*, estamos buscando un vehículo disponible 🧭, cuando lo encontremos te notificaremos los datos del taxi.`,
       msgNotFound: 'Mensaje no reconocido',
       msgUnknown: "¡Hola! Parece que mi entrenamiento me hace un poco despistado a veces 😅. ¿Cómo puedo ayudarte hoy?",
       optionsList: ["✅ Confirmar", "📝 Modificar"],
@@ -50,13 +53,16 @@ function getMsg(type, user) {
     },
     en: {
       addressDetected: 'The detected address is, ',
+      assignedService: "Your service has been assigned with the following data:",
       confirmAddress: 'Share your location from WhatsApp again.',
       confirmName: 'confirm your name.',
       driverName: 'Driver: ',
       estimatedTime: 'Estimated Time: ',
       farewell: "Goodbye! We hope to see you again soon.",
-      greeting: `Hello! *${userName}*, choose the service you want.`,
+      greeting: `Hello👋, *${userName}*, choose the service you want.`,
+      howShareLocation: 'Press 📎, select the "location" option, and "send your current location."',
       langList: ["English 🇺🇸", "Spanish 🇪🇸"],
+      lookingForVehicle: `*${userName}*, we are looking for an available vehicle 🧭, and when we find it, we will notify you of the taxi's details.`,
       msgNotFound: 'Message not found',
       msgUnknown: "Hello! It seems like my training makes me a little absent-minded sometimes 😅. How can I help you today?",
       optionsList: ["✅ Confirm", "📝 Modify"],
@@ -80,7 +86,7 @@ function findUserByPhone(phone) {
   const customerData = {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
-    573242796218: { name: "Maria", age: 28, city: "City C", lang: "en" },
+    5732427962189: { name: "Maria", age: 28, city: "City C", lang: "en" },
   };
   return customerData[phone];
 }
@@ -101,7 +107,7 @@ function startConversation(number, message, messageId) {
 
   const foundGreeting = Object.entries(greetings).some(([lang, keywords]) => {
       if (keywords.some((greeting) => message.toLowerCase().includes(greeting.toLowerCase()))) {
-          userLang = lang;
+          userLang = lang
           nativeLang = true
           return true;
       }
@@ -115,7 +121,6 @@ function startConversation(number, message, messageId) {
     return false;
 });
     if (foundGreeting) {
-      console.log(user)
       if (user) {
         let body = getMsg("greeting", user)
         let options = getMsg("servicesList", user)
@@ -156,13 +161,14 @@ async function adminChatbot(text, number, messageId, name, session) {
       startConversation(number, text, messageId)
     } else {
       if(confirmTypeService){
-          let textMsg = textMessage(number,getMsg("shareLocation"))
+          let msg = getMsg("shareLocation") + "\n\n" + getMsg("howShareLocation")
+          let textMsg = textMessage(number,msg)
           sendMsgWhatsapp(textMsg)
           typeServiceChoosed = text
           confirmTypeService = false
       }
       else if (requestName) {
-        let customerName = `*${text.charAt(0).toUpperCase() + text.slice(1)}* `
+        let customerName = `*${text.charAt(0).toUpperCase() + text.slice(1)}*, `
         let body = customerName + getMsg('confirmName');
         let options = getMsg('optionsList')
         let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
@@ -177,14 +183,13 @@ async function adminChatbot(text, number, messageId, name, session) {
           let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
           list.push(replyButtonData)
         }
-        if (text.includes("confirm") || text.includes("confirmar")) {
+        if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
           let textMsg = textMessage(number,getMsg("shareLocation"))
           sendMsgWhatsapp(textMsg)
         }else{
           console.log("epeetir la pregunta, de: digite su nombre nuevamente.")
           //repeetir la pregunta, de: digite su nombre nuevamente.
-        }
-             
+        }     
         confirmLanguage = true;
         confirmName = false;
       }
@@ -211,16 +216,11 @@ async function adminChatbot(text, number, messageId, name, session) {
         confirmAddress = true
       }
       else if (confirmAddress) {
-        if (text.includes("confirm") || text.includes("confirmar")) {
-          let response =
-          getMsg('pickUpAddress') + ` *${customerAddress}*\n` +
-          getMsg('estimatedTime') + "15m\n" +
-          getMsg('driverName') + "JUAN MONTOYA\n" +
-          getMsg('transportCompany') +  "TAXI LAS AGUILAS"
-          let textMessageName = textMessage(number, response)
-          sendMsgWhatsapp(textMessageName)
-          confirmAddress = false;
-        } else {
+        if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
+          let textMsg = textMessage(number, getMsg('lookingForVehicle'))
+          sendMsgWhatsapp(textMsg)
+          sendAssignedService(customerAddress,number)
+        } else if(text.toLowerCase().includes("modify") || text.toLowerCase().includes("modificar")) {
           let textMessageName = textMessage(number, getMsg('confirmAddress'))
           sendMsgWhatsapp(textMessageName)
         }
@@ -285,4 +285,30 @@ function replaceStart(s) {if (s.startsWith("521")) {return "52" + s.slice(3)} el
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+function sleepExtended() {
+  return new Promise(resolve => {
+    setTimeout(resolve, 10000); // Simulando un tiempo de espera de 3 segundos
+  });
+}
+
+async function sendAssignedService(customerAddress, number) {
+  try {
+    await sleepExtended();
+
+    let response =
+      getMsg('assignedService') + "\n\n" +
+      getMsg('pickUpAddress') + ` *${customerAddress}*\n` +
+      getMsg('estimatedTime') + "15m\n" +
+      getMsg('driverName') + "JUAN MONTOYA\n" +
+      getMsg('transportCompany') + "TAXI LAS AGUILAS";
+
+    let textMessageName = textMessage(number, response);
+    await sendMsgWhatsapp(textMessageName);
+    confirmAddress = false;
+  } catch (error) {
+    console.error('Error sending assigned service message:', error);
+    // Handle the error as needed
+  }
+}
+
 export {findUserByPhone,getAddress,getWspMessage,sendMsgWhatsapp,textMessage,replaceStart,adminChatbot,markReadMessage}

@@ -28,8 +28,8 @@ function getMsg(type, user) {
       addressDetected: 'La dirección detectada es, ',
       assignedService: "Tu servicio ha sido asignado con los siguientes datos:",
       cancelService: 'Tu Servicio ha sido Cancelado',
-      confirmAddress: 'Comparte tu ubicación desde WhatsApp nuevamente.',
-      confirmName: 'confirma tu nombre.',
+      confirmAddressAgain: '🌐 Necesitamos tu dirección para proceder, ¿puedes confirmarla?',
+      confirmName: 'Confirma tu nombre.',
       driverName: 'Conductor: ',
       farewell: "¡Hasta luego! Esperamos verte pronto.",
       greeting: `Hola👋, *${userName}*, elige el servicio que deseas.`,
@@ -47,6 +47,7 @@ function getMsg(type, user) {
       servicesList: ["Taxi 🚕", "Comida 🍔"],
       shareLocation: 'Comparte tu ubicación desde WhatsApp.',
       shareLocationUserName: `¡Hola! *${userName}*, comparte tu ubicación desde WhatsApp.`,
+      shareLocationAgain: 'Comparte tu ubicación desde WhatsApp nuevamente.',
       undetectedAddress: 'No se pudo obtener la dirección, intenta nuevamente',
       unrecognizedMsg: 'Mensaje no reconocido',
       verifyAddress: "Verifica por favor la dirección ingresada.",
@@ -56,8 +57,8 @@ function getMsg(type, user) {
       addressDetected: 'The detected address is, ',
       assignedService: "Your service has been assigned with the following data:",
       cancelService: "Your service has been canceled.",
-      confirmAddress: 'Share your location from WhatsApp again.',
-      confirmName: 'confirm your name.',
+      confirmAddressAgain: '🌐 We need your address to proceed, can you confirm it?',
+      confirmName: 'Confirm your name.',
       driverName: 'Driver: ',
       estimatedTime: 'Estimated Time: ',
       farewell: "Goodbye! We hope to see you again soon.",
@@ -73,8 +74,9 @@ function getMsg(type, user) {
       transportCompany: 'Transport Company: ',
       service: "Thank you for using our service.",
       servicesList: ["Taxi 🚕", "Food 🍔"],
-      shareLocation: 'share your location from WhatsApp',
+      shareLocation: 'Share your location from WhatsApp',
       shareLocationUserName: `Hello! *${userName}*, share your location from WhatsApp.`,
+      shareLocationAgain: 'Share your location from WhatsApp again.',
       undetectedAddress: 'Unable to retrieve the address, try again.',
       unrecognizedMsg: 'Unrecognized message',
       verifyAddress: "Please verify the address entered.",
@@ -88,7 +90,7 @@ function findUserByPhone(phone) {
   const customerData = {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
-    573242796218: { name: "Maria", age: 28, city: "City C", lang: "en" },
+    573242796218: { name: "Esleyder", age: 28, city: "City C", lang: "en" },
   };
   return customerData[phone];
 }
@@ -105,6 +107,7 @@ function startConversation(number, message, messageId) {
     es: ["vehiculo", "viaje", "traslado", "transporte", "conductor", "coche", "automóvil", "movilidad","pedido", "restaurante", "entregar", "envío", "menú", "almuerzo", "cena", "rápido","taxi","comida"]
   }
   let user = findUserByPhone(number)
+  let foundService = false
   if (isFirstGreeting) {
     
     let foundGreeting = Object.entries(greetings).some(([lang, greetingsList]) => {
@@ -114,14 +117,17 @@ function startConversation(number, message, messageId) {
       }
       return false;
     });
-    const foundService = Object.entries(services).some(([lang, servicesList]) => {
+    
+    if(!foundGreeting){
+    foundService = Object.entries(services).some(([lang, servicesList]) => {
       if (servicesList.some(service => service.toLowerCase().includes(message.toLowerCase()))) {
-        userLang = lang;
-        foundGreeting = false
-        return true;
+        userLang = lang
+        return true
       }
-      return false;
+      return false
     });
+    }
+
     if (foundGreeting) {
       if (user) {
         let body = getMsg("greeting", user)
@@ -136,7 +142,7 @@ function startConversation(number, message, messageId) {
       }
       list.forEach((item) => {sendMsgWhatsapp(item)})
       isFirstGreeting = false;
-    } else if (foundService) {
+    } else if (foundService ) {
       if (user) {
         let textMsg = textMessage(number,getMsg("shareLocationUserName",user) + "\n\n" + getMsg("howShareLocation"))
         sendMsgWhatsapp(textMsg)
@@ -153,7 +159,7 @@ function startConversation(number, message, messageId) {
     }
   }
 }
-async function adminChatbot(text, number, messageId, name, session) {
+async function adminChatbot(text, number, messageId) {
   let list = [];
   let markRead = markReadMessage(messageId)
   list.push(markRead)
@@ -222,9 +228,17 @@ async function adminChatbot(text, number, messageId, name, session) {
           let textMsg = textMessage(number, getMsg('lookingForVehicle'))
           sendMsgWhatsapp(textMsg)
           sendAssignedService(customerAddress,number)
+          isFirstGreeting = true
         } else if(text.toLowerCase().includes("modify") || text.toLowerCase().includes("modificar")) {
-          let textMessageName = textMessage(number, getMsg('confirmAddress'))
+          let textMessageName = textMessage(number, getMsg('shareLocationAgain'))
           sendMsgWhatsapp(textMessageName)
+        }else{
+          let body = getMsg('confirmAddressAgain');
+          let options = getMsg('optionsList');
+          let replyButtonData = buttonReplyMessage(number, options, body, "sed1", messageId);
+          list.push(replyButtonData);
+          detectedAddress = false
+          confirmAddress = true
         }
       }
     }
@@ -289,7 +303,7 @@ function sleep(ms) {
 }
 function sleepExtended() {
   return new Promise(resolve => {
-    setTimeout(resolve, 10000); // Simulando un tiempo de espera de 3 segundos
+    setTimeout(resolve, 10000); // Simulando un tiempo de espera de 10 segundos
   });
 }
 

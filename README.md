@@ -7,36 +7,6 @@
 - React to user messages with emojis
 - Send PDF documents
 
-## To Test Locally
-
-1. Navigate to the directory where you downloaded the project
-
-```bash
-  cd eagleBotJS
-```
-2. Create a virtual environment with Python version 3.10
-
-```bash
-  virtualenv -p 3.10.11 .venv
-```
-3. Activate the virtual environment
-
-```bash
-  source .venv/bin/activate
-```
-4. Install dependencies
-
-```bash
-  pip install -r requirements.txt
-```
-
-5. Run the application
-
-```bash
-  python app.py
-```
-
-
 ## Simulate User Messages with Postman
 
 ```javascript

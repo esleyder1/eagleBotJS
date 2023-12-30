@@ -29,8 +29,9 @@ function getMsg(type, user) {
       assignedService: "Tu servicio ha sido asignado con los siguientes datos:",
       cancelService: 'Tu Servicio ha sido Cancelado',
       confirmAddressAgain: '🌐 Necesitamos tu dirección para proceder, ¿puedes confirmarla?',
-      confirmName: 'Confirma tu nombre.',
+      confirmName: 'confirma tu nombre.',
       driverName: 'Conductor: ',
+      estimatedTime: 'Tiempo Estimado: ',
       farewell: "¡Hasta luego! Esperamos verte pronto.",
       greeting: `Hola👋, *${userName}*, elige el servicio que deseas.`,
       howShareLocation: 'Presiona 📎, selecciona la opción “ubicación” y “envía tu ubicación actual."',
@@ -40,7 +41,7 @@ function getMsg(type, user) {
       msgUnknown: "¡Hola! Parece que mi entrenamiento me hace un poco despistado a veces 😅. ¿Cómo puedo ayudarte hoy?",
       optionsList: ["✅ Confirmar", "📝 Modificar"],
       pickUpAddress: 'Dirección de Recogida 📍: ',
-      estimatedTime: 'Tiempo Estimado: ',
+      rewriteName: 'Escribe tu nombre corectamente.',
       transportCompany: 'Empresa de transporte: ',
       preferredLang: '¿Cuál es tu idioma de preferencia para la conversación?',
       service: "Gracias por utilizar nuestro servicio.",
@@ -51,14 +52,14 @@ function getMsg(type, user) {
       undetectedAddress: 'No se pudo obtener la dirección, intenta nuevamente',
       unrecognizedMsg: 'Mensaje no reconocido',
       verifyAddress: "Verifica por favor la dirección ingresada.",
-      welcome: "Hola, soy EagleBot, para iniciar, ingresa tu nombre."
+      welcome: "Hola, soy EagleBot 🤖. Es un placer atenderte. Para iniciar, ingresa tu nombre."
     },
     en: {
       addressDetected: 'The detected address is, ',
       assignedService: "Your service has been assigned with the following data:",
       cancelService: "Your service has been canceled.",
       confirmAddressAgain: '🌐 We need your address to proceed, can you confirm it?',
-      confirmName: 'Confirm your name.',
+      confirmName: 'confirm your name.',
       driverName: 'Driver: ',
       estimatedTime: 'Estimated Time: ',
       farewell: "Goodbye! We hope to see you again soon.",
@@ -71,6 +72,7 @@ function getMsg(type, user) {
       optionsList: ["✅ Confirm", "📝 Modify"],
       preferredLang: 'What is your preferred language for the conversation?',
       pickUpAddress: 'Pick-up Address 📍: ',
+      rewriteName: 'Write your name correctly.',
       transportCompany: 'Transport Company: ',
       service: "Thank you for using our service.",
       servicesList: ["Taxi 🚕", "Food 🍔"],
@@ -80,7 +82,7 @@ function getMsg(type, user) {
       undetectedAddress: 'Unable to retrieve the address, try again.',
       unrecognizedMsg: 'Unrecognized message',
       verifyAddress: "Please verify the address entered.",
-      welcome: `Hello, I'm EagleBot, to get started, enter your name.`
+      welcome: `Hello, I'm EagleBot 🤖. It's a pleasure to assist you. To begin, enter your name.`
     }
   }
   const userMessages = messages[userLang] || messages["en"];
@@ -112,11 +114,11 @@ function startConversation(number, message, messageId) {
     
     let foundGreeting = Object.entries(greetings).some(([lang, greetingsList]) => {
       if (greetingsList.some(greeting => greeting.toLowerCase().includes(message.toLowerCase()))) {
-        userLang = lang;
-        return true;
+        userLang = lang
+        return true
       }
-      return false;
-    });
+      return false
+    })
     
     if(!foundGreeting){
     foundService = Object.entries(services).some(([lang, servicesList]) => {
@@ -125,7 +127,7 @@ function startConversation(number, message, messageId) {
         return true
       }
       return false
-    });
+    })
     }
 
     if (foundGreeting) {
@@ -176,30 +178,27 @@ async function adminChatbot(text, number, messageId) {
           confirmTypeService = false
       }
       else if (requestName) {
-        let customerName = `*${text.charAt(0).toUpperCase() + text.slice(1)}*, `
-        let body = customerName + getMsg('confirmName');
+        userName = `${text.charAt(0).toUpperCase() + text.slice(1)}`
+        let body = `*${userName}* ` + getMsg('confirmName')
         let options = getMsg('optionsList')
         let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
         list.push(replyButtonData)
-        requestName = false;
-        confirmName = true;
+        requestName = false
+        confirmName = true
       }
       else if (confirmName) {
-        if(!nativeLang){ //si el usuario a respondido con un saludo, entonces se conoce el idioma nativ
-          let body = getMsg('preferredLang')
-          let options = getMsg('langList')
-          let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
-          list.push(replyButtonData)
-        }
-        if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
+        console.log(nativeLang)
+        
+          if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
           let textMsg = textMessage(number,getMsg("shareLocation"))
           sendMsgWhatsapp(textMsg)
-        }else{
-          console.log("epeetir la pregunta, de: digite su nombre nuevamente.")
-          //repeetir la pregunta, de: digite su nombre nuevamente.
-        }     
-        confirmLanguage = true;
-        confirmName = false;
+          confirmName = false;
+          }else{
+            let textMsg = textMessage(number,getMsg("rewriteName"))
+            sendMsgWhatsapp(textMsg)
+            confirmName = true;
+          } 
+        
       }
       else if (confirmLanguage) {
         console.log(text,text.includes("english"))

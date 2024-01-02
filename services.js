@@ -46,8 +46,8 @@ function getMsg(type, user) {
       preferredLang: '¿Cuál es tu idioma de preferencia para la conversación?',
       service: "Gracias por utilizar nuestro servicio.",
       servicesList: ["Taxi 🚕", "Comida 🍔"],
-      shareLocation: 'Comparte tu ubicación desde WhatsApp.',
-      shareLocationUserName: `¡Hola! *${userName}*, comparte tu ubicación desde WhatsApp.`,
+      shareLocation: 'Puedes ingresar manualmente una dirección o compartir tu ubicación.',
+      shareLocationUserName: `¡Hola! *${userName}*, Puedes ingresar manualmente una dirección o compartir tu ubicación.`,
       shareLocationAgain: 'Comparte tu ubicación desde WhatsApp nuevamente.',
       undetectedAddress: 'No se pudo obtener la dirección, intenta nuevamente',
       unrecognizedMsg: 'Mensaje no reconocido',
@@ -92,7 +92,7 @@ function findUserByPhone(phone) {
   const customerData = {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
-    573242796218: { name: "Esleyder", age: 28, city: "City C", lang: "en" },
+    573242796218: { name: "Esleyder", age: 28, city: "City C", lang: "es" },
   }
   return customerData[phone];
 }
@@ -156,26 +156,19 @@ function startConversation(number, message, messageId) {
           "sed1",
           messageId
         );
-        list.push(replyButtonData);
+       list.push(replyButtonData); 
         confirmTypeService = true;
       } else {
         let textMsg = textMessage(number, getMsg("welcome"));
         sendMsgWhatsapp(textMsg);
         requestName = true;
       }
-      list.forEach((item) => {
-        sendMsgWhatsapp(item);
-      });
+
       isFirstGreeting = false;
     } else if (foundService) {
       if (user) {
-        let textMsg = textMessage(
-          number,
-          getMsg("shareLocationUserName", user) +
-            "\n\n" +
-            getMsg("howShareLocation")
-        );
-        sendMsgWhatsapp(textMsg);
+        let requestLocation = sendRequestLocation(number,getMsg("shareLocationUserName",user))
+        list.push(requestLocation); 
       } else {
         let textMsg = textMessage(number, getMsg("welcome"));
         sendMsgWhatsapp(textMsg);
@@ -187,6 +180,10 @@ function startConversation(number, message, messageId) {
       sendMsgWhatsapp(textMsg);
       isFirstGreeting = true;
     }
+
+    list.forEach((item) => {
+      sendMsgWhatsapp(item);
+    });
   }
 }
 /**
@@ -377,6 +374,7 @@ async function sendMsgWhatsapp(data) {
     if (response.ok) {const response = await response.json()}
     else {
       const error = await response.json()
+      console.log(error)
     }
   } catch (error) {
     return [error, 403];
@@ -430,6 +428,23 @@ function listReplyMessage(number, options, body, sedd, messageId) {
         sections: [{ title: "Sections", rows: rows }],
       },
     },
+  });
+}
+
+function sendRequestLocation(number, body) {
+  return JSON.stringify({
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: number,
+    type: "interactive",
+    interactive:{
+       // Your interactive object  
+       type: "location_request_message",
+       body: { text: body },
+       action: {
+           name: "send_location" 
+       }
+    }
   });
 }
 

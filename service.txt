@@ -28,9 +28,10 @@ function getMsg(type, user) {
       addressDetected: 'La dirección detectada es, ',
       assignedService: "Tu servicio ha sido asignado con los siguientes datos:",
       cancelService: 'Tu Servicio ha sido Cancelado',
-      confirmAddress: 'Comparte tu ubicación desde WhatsApp nuevamente.',
+      confirmAddressAgain: '🌐 Necesitamos tu dirección para proceder, ¿puedes confirmarla?',
       confirmName: 'confirma tu nombre.',
       driverName: 'Conductor: ',
+      estimatedTime: 'Tiempo Estimado: ',
       farewell: "¡Hasta luego! Esperamos verte pronto.",
       greeting: `Hola👋, *${userName}*, elige el servicio que deseas.`,
       howShareLocation: 'Presiona 📎, selecciona la opción “ubicación” y “envía tu ubicación actual."',
@@ -40,23 +41,24 @@ function getMsg(type, user) {
       msgUnknown: "¡Hola! Parece que mi entrenamiento me hace un poco despistado a veces 😅. ¿Cómo puedo ayudarte hoy?",
       optionsList: ["✅ Confirmar", "📝 Modificar"],
       pickUpAddress: 'Dirección de Recogida 📍: ',
-      estimatedTime: 'Tiempo Estimado: ',
+      rewriteName: 'Escribe tu nombre corectamente.',
       transportCompany: 'Empresa de transporte: ',
       preferredLang: '¿Cuál es tu idioma de preferencia para la conversación?',
       service: "Gracias por utilizar nuestro servicio.",
       servicesList: ["Taxi 🚕", "Comida 🍔"],
       shareLocation: 'Comparte tu ubicación desde WhatsApp.',
       shareLocationUserName: `¡Hola! *${userName}*, comparte tu ubicación desde WhatsApp.`,
+      shareLocationAgain: 'Comparte tu ubicación desde WhatsApp nuevamente.',
       undetectedAddress: 'No se pudo obtener la dirección, intenta nuevamente',
       unrecognizedMsg: 'Mensaje no reconocido',
       verifyAddress: "Verifica por favor la dirección ingresada.",
-      welcome: "Hola, soy EagleBot, para iniciar, ingresa tu nombre."
+      welcome: "Hola, soy EagleBot 🤖. Es un placer atenderte. Para iniciar, ingresa tu nombre."
     },
     en: {
       addressDetected: 'The detected address is, ',
       assignedService: "Your service has been assigned with the following data:",
       cancelService: "Your service has been canceled.",
-      confirmAddress: 'Share your location from WhatsApp again.',
+      confirmAddressAgain: '🌐 We need your address to proceed, can you confirm it?',
       confirmName: 'confirm your name.',
       driverName: 'Driver: ',
       estimatedTime: 'Estimated Time: ',
@@ -70,15 +72,17 @@ function getMsg(type, user) {
       optionsList: ["✅ Confirm", "📝 Modify"],
       preferredLang: 'What is your preferred language for the conversation?',
       pickUpAddress: 'Pick-up Address 📍: ',
+      rewriteName: 'Write your name correctly.',
       transportCompany: 'Transport Company: ',
       service: "Thank you for using our service.",
       servicesList: ["Taxi 🚕", "Food 🍔"],
-      shareLocation: 'share your location from WhatsApp',
+      shareLocation: 'Share your location from WhatsApp',
       shareLocationUserName: `Hello! *${userName}*, share your location from WhatsApp.`,
+      shareLocationAgain: 'Share your location from WhatsApp again.',
       undetectedAddress: 'Unable to retrieve the address, try again.',
       unrecognizedMsg: 'Unrecognized message',
       verifyAddress: "Please verify the address entered.",
-      welcome: `Hello, I'm EagleBot, to get started, enter your name.`
+      welcome: `Hello, I'm EagleBot 🤖. It's a pleasure to assist you. To begin, enter your name.`
     }
   }
   const userMessages = messages[userLang] || messages["en"];
@@ -88,7 +92,7 @@ function findUserByPhone(phone) {
   const customerData = {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
-    573242796218: { name: "Maria", age: 28, city: "City C", lang: "en" },
+    573242796218: { name: "Esleyder", age: 28, city: "City C", lang: "en" },
   };
   return customerData[phone];
 }
@@ -105,16 +109,17 @@ function startConversation(number, message, messageId) {
     es: ["vehiculo", "viaje", "traslado", "transporte", "conductor", "coche", "automóvil", "movilidad","pedido", "restaurante", "entregar", "envío", "menú", "almuerzo", "cena", "rápido","taxi","comida"]
   }
   let user = findUserByPhone(number)
+  let foundService = false
   if (isFirstGreeting) {
     
     let foundGreeting = Object.entries(greetings).some(([lang, greetingsList]) => {
       if (greetingsList.some(greeting => greeting.toLowerCase().includes(message.toLowerCase()))) {
-        userLang = lang;
-        return true;
+        userLang = lang
+        return true
       }
-      return false;
-    });
-    let foundService = false
+      return false
+    })
+    
     if(!foundGreeting){
     foundService = Object.entries(services).some(([lang, servicesList]) => {
       if (servicesList.some(service => service.toLowerCase().includes(message.toLowerCase()))) {
@@ -122,7 +127,7 @@ function startConversation(number, message, messageId) {
         return true
       }
       return false
-    });
+    })
     }
 
     if (foundGreeting) {
@@ -156,7 +161,7 @@ function startConversation(number, message, messageId) {
     }
   }
 }
-async function adminChatbot(text, number, messageId, name, session) {
+async function adminChatbot(text, number, messageId) {
   let list = [];
   let markRead = markReadMessage(messageId)
   list.push(markRead)
@@ -173,30 +178,27 @@ async function adminChatbot(text, number, messageId, name, session) {
           confirmTypeService = false
       }
       else if (requestName) {
-        let customerName = `*${text.charAt(0).toUpperCase() + text.slice(1)}*, `
-        let body = customerName + getMsg('confirmName');
+        userName = `${text.charAt(0).toUpperCase() + text.slice(1)}`
+        let body = `*${userName}* ` + getMsg('confirmName')
         let options = getMsg('optionsList')
         let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
         list.push(replyButtonData)
-        requestName = false;
-        confirmName = true;
+        requestName = false
+        confirmName = true
       }
       else if (confirmName) {
-        if(!nativeLang){ //si el usuario a respondido con un saludo, entonces se conoce el idioma nativ
-          let body = getMsg('preferredLang')
-          let options = getMsg('langList')
-          let replyButtonData = buttonReplyMessage(number,options,body,"sed1",messageId)
-          list.push(replyButtonData)
-        }
-        if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
+        console.log(nativeLang)
+        
+          if (text.toLowerCase().includes("confirm") || text.toLowerCase().includes("confirmar")) {
           let textMsg = textMessage(number,getMsg("shareLocation"))
           sendMsgWhatsapp(textMsg)
-        }else{
-          console.log("epeetir la pregunta, de: digite su nombre nuevamente.")
-          //repeetir la pregunta, de: digite su nombre nuevamente.
-        }     
-        confirmLanguage = true;
-        confirmName = false;
+          confirmName = false;
+          }else{
+            let textMsg = textMessage(number,getMsg("rewriteName"))
+            sendMsgWhatsapp(textMsg)
+            confirmName = true;
+          } 
+        
       }
       else if (confirmLanguage) {
         console.log(text,text.includes("english"))
@@ -227,8 +229,15 @@ async function adminChatbot(text, number, messageId, name, session) {
           sendAssignedService(customerAddress,number)
           isFirstGreeting = true
         } else if(text.toLowerCase().includes("modify") || text.toLowerCase().includes("modificar")) {
-          let textMessageName = textMessage(number, getMsg('confirmAddress'))
+          let textMessageName = textMessage(number, getMsg('shareLocationAgain'))
           sendMsgWhatsapp(textMessageName)
+        }else{
+          let body = getMsg('confirmAddressAgain');
+          let options = getMsg('optionsList');
+          let replyButtonData = buttonReplyMessage(number, options, body, "sed1", messageId);
+          list.push(replyButtonData);
+          detectedAddress = false
+          confirmAddress = true
         }
       }
     }

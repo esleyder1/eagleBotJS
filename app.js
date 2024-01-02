@@ -1,16 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import sett from './sett.js';
-import {
-    findUserByPhone,
-    getAddress,
-    getWspMessage,
-    sendMsgWhatsapp,
-    textMessage,
-    replaceStart,
-    adminChatbot,
-    markReadMessage,
-  } from './services.js';
+import {getWspMessage,adminChatbot} from './services.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -42,7 +33,7 @@ app.post('/webhook', async (req, res) => {
         const changes = entry.changes[0];
         const value = changes.value;
         const message = value.messages[0];
-        const number = replaceStart(message.from);
+        const number = message.from
         const messageId = message.id;
         const contacts = value.contacts[0];
         const name = contacts.profile.name;

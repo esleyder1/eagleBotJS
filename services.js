@@ -4,14 +4,14 @@ import fetch from "node-fetch"
 const options = { provider: "google", apiKey: sett.googleApiKey }
 const geocoder = NodeGeocoder(options)
 
-let isFirstGreeting = true;
-let requestName = false;
-let confirmName = false;
-let confirmAddress = false;
-let customerAddress = "";
-let detectedAddress = false;
-let confirmLanguage = false;
-let confirmTypeService = false;
+let isFirstGreeting = true
+let requestName = false
+let confirmName = false
+let confirmAddress = false
+let customerAddress = ""
+let detectedAddress = false
+let confirmLanguage = false
+let confirmTypeService = false
 let nativeLang = false
 
 let typeServiceChoosed = null
@@ -22,7 +22,7 @@ function getMsg(type, user) {
   if (userName === null) {
     userName = user?.name
   }
-  userLang = user?.lang || userLang;
+  userLang = user?.lang || userLang
   const messages = {
     es: {
       addressDetected: 'La dirección detectada es, ',
@@ -97,7 +97,7 @@ function findUserByPhone(phone) {
   return customerData[phone];
 }
 /*
-  startConversation() extrae el mensaje del cliente para determinar la intención del cliente.
+  startConversation() extrae el mensaje del cliente para determinar la intención.
 */
 function startConversation(number, message, messageId) {
   let list = [];
@@ -143,7 +143,8 @@ function startConversation(number, message, messageId) {
         return false;
       });
     }
-
+    // foundGreeting => true, el bot responde con un mensaje de saludo + los servicios que ofrece.
+    // sino encuentra el saludo, responde con una bienvenida.
     if (foundGreeting) {
       if (user) {
         let body = getMsg("greeting", user);
@@ -376,7 +377,6 @@ async function sendMsgWhatsapp(data) {
     if (response.ok) {const response = await response.json()}
     else {
       const error = await response.json()
-      console.log(error)
     }
   } catch (error) {
     return [error, 403];
@@ -427,7 +427,7 @@ function listReplyMessage(number, options, body, sedd, messageId) {
       body: { text: body },
       action: {
         button: "show options",
-        sections: [{ title: "Secciones", rows: rows }],
+        sections: [{ title: "Sections", rows: rows }],
       },
     },
   });
@@ -480,18 +480,12 @@ function sleep(ms) {
 async function sendAssignedService(customerAddress, number) {
   try {
     await sleep(10000);
-
     let response =
-      getMsg("assignedService") +
-      "\n\n" +
-      getMsg("pickUpAddress") +
-      ` *${customerAddress}*\n` +
-      getMsg("estimatedTime") +
-      "15m\n" +
-      getMsg("driverName") +
-      "JUAN MONTOYA\n" +
-      getMsg("transportCompany") +
-      "TAXI LAS AGUILAS";
+      getMsg("assignedService") + "\n\n" +
+      getMsg("pickUpAddress") + ` *${customerAddress}*\n` +
+      getMsg("estimatedTime") + "15m\n" +
+      getMsg("driverName") + "JUAN MONTOYA\n" +
+      getMsg("transportCompany") + "TAXI LAS AGUILAS";
 
     let textService = textMessage(number, response);
     await sendMsgWhatsapp(textService);
@@ -500,16 +494,7 @@ async function sendAssignedService(customerAddress, number) {
     confirmAddress = false;
   } catch (error) {
     console.error("Error sending assigned service message:", error);
-    // Handle the error as needed
   }
 }
 
-export {
-  findUserByPhone,
-  getAddress,
-  getWspMessage,
-  sendMsgWhatsapp,
-  textMessage,
-  adminChatbot,
-  markReadMessage,
-};
+export {getWspMessage,adminChatbot }

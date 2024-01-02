@@ -38,7 +38,12 @@ app.post('/webhook', async (req, res) => {
         const contacts = value.contacts[0];
         const name = contacts.profile.name;
         const text = await getWspMessage(message);
-        await adminChatbot(text, number, messageId, name, req.session);
+        await adminChatbot(text, number, messageId);
+        console.log('Número:', number);
+        console.log('ID de Mensaje:', messageId);
+        console.log('Contactos:', contacts);
+        console.log('Nombre:', name);
+        console.log('Texto del Mensaje:', text);
         res.send('Sent');
     } catch (error) {
         res.status(500).send('Not sent ' + error);

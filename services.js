@@ -93,6 +93,7 @@ function findUserByPhone(phone) {
     571234567890: { name: "Ana", age: 25, city: "City A", lang: "en" },
     579876543210: { name: "Juan", age: 30, city: "City B", lang: "es" },
     573242796218: { name: "Esleyder", age: 28, city: "City C", lang: "es" },
+    1: { name: "William", age: 28, city: "Salt Lake City", lang: "en" },
   }
   return customerData[phone];
 }
@@ -190,7 +191,7 @@ function startConversation(number, message, messageId) {
  * Administra el chatbot con la información proporcionada.
  *
  * @param {string} text - El texto o contenido del mensaje del cliente.
- * @param {number} number - Un número del cliente
+ * @param {string} number - Un número del cliente
  * @param {string} messageId - El identificador único del mensaje
  */
 async function adminChatbot(text, number, messageId) {
@@ -391,10 +392,18 @@ function textMessage(number, text) {
   });
 }
 //buttonReplyMessage() se emplea para enviar un mensaje con texto y botones.
-function buttonReplyMessage(number, options, body, sedd, messageId) {
+/**
+ * Params
+ *  number => (string) recibe el número del whatsapp del cliente.
+    options => (array) en este ejemplo se observa un arreglo de dos opciones, 
+    que luego se convertiran en botones y tendrán un identificador único, ["Taxi 🚕", "Comida 🍔"]
+    body => (string) cuerpo del mensaje
+    seed => (string) identificador único del mensaje
+ */
+function buttonReplyMessage(number, options, body, seed, messageId) {
   const buttons = options.map((option, i) => ({
     type: "reply",
-    reply: { id: sedd + "_btn_" + (i + 1), title: option },
+    reply: { id: seed + "_btn_" + (i + 1), title: option },
   }));
   return JSON.stringify({
     messaging_product: "whatsapp",
@@ -409,9 +418,16 @@ function buttonReplyMessage(number, options, body, sedd, messageId) {
   });
 }
 //listReplyMessage() envia un mensaje con una lista de opciones.
-function listReplyMessage(number, options, body, sedd, messageId) {
+/**
+ * Params
+ *  number => (string) recibe el número del whatsapp del cliente.
+    options => (array) opciones de una lista y tendrán un identificador único ["Taxi 🚕", "Comida 🍔"]
+    body => (string) cuerpo del mensaje
+    seed => (string) identificador único del mensaje
+ */
+function listReplyMessage(number, options, body, seed) {
   const rows = options.map((option, i) => ({
-    id: sedd + "_row_" + (i + 1),
+    id: seed + "_row_" + (i + 1),
     title: option,
     description: "",
   }));
@@ -431,14 +447,18 @@ function listReplyMessage(number, options, body, sedd, messageId) {
   });
 }
 
+/*
+sendRequestLocation() permite enviar un mensaje interactivo, se le pasa una cadena de texto, 
+el se enviará un mensaje con un botón por defecto: Enviar Ubicación, el texto cambia dependiendo del idioma de la aplicación
+*/
 function sendRequestLocation(number, body) {
+  console.log(typeof(body))
   return JSON.stringify({
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: number,
     type: "interactive",
     interactive:{
-       // Your interactive object  
        type: "location_request_message",
        body: { text: body },
        action: {
@@ -448,8 +468,10 @@ function sendRequestLocation(number, body) {
   });
 }
 
-// stickerMessage() enviar un sticket de la lista de stickers.
-//uso => sticker = stickerMessage(number, getMediaId("perro_traje", "sticker"))
+/*
+stickerMessage() enviar un sticket de la lista de stickers.
+uso => sticker = stickerMessage(number, getMediaId("perro_traje", "sticker"))
+*/
 function stickerMessage(number, stickerId) {
   return JSON.stringify({
     messaging_product: "whatsapp",
@@ -476,8 +498,10 @@ function getMediaId(mediaName, mediaType) {
   return mediaId;
 }
 
-// replyReactionMessage() se usa para responder a un mensaje del cliente con un emoji.
-// uso => replyReaction = replyReactionMessage(number, messageId, "🫡")
+/*
+replyReactionMessage() se usa para responder a un mensaje del cliente con un emoji.
+uso => replyReaction = replyReactionMessage(number, messageId, "🫡")
+*/
 function replyReactionMessage(number, messageId, emoji) {
   return JSON.stringify({
     messaging_product: "whatsapp",

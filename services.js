@@ -204,9 +204,8 @@ async function adminChatbot(text, number, messageId) {
       startConversation(number, text, messageId);
     } else {
       if (confirmTypeService) {
-        let msg = getMsg("shareLocation") + "\n\n" + getMsg("howShareLocation");
-        let textMsg = textMessage(number, msg);
-        sendMsgWhatsapp(textMsg);
+        let requestLocation = sendRequestLocation(number,getMsg("shareLocation"))
+        list.push(requestLocation); 
         typeServiceChoosed = text;
         confirmTypeService = false;
       } else if (requestName) {
@@ -230,8 +229,8 @@ async function adminChatbot(text, number, messageId) {
           text.toLowerCase().includes("confirm") ||
           text.toLowerCase().includes("confirmar")
         ) {
-          let textMsg = textMessage(number, getMsg("shareLocation"));
-          sendMsgWhatsapp(textMsg);
+          let requestLocation = sendRequestLocation(number,getMsg("shareLocation"))
+          list.push(requestLocation); 
           confirmName = false;
         } else {
           let textMsg = textMessage(number, getMsg("rewriteName"));
@@ -245,8 +244,8 @@ async function adminChatbot(text, number, messageId) {
         } else if (text.includes("spanish") || text.includes("español")) {
           userLang = "es";
         }
-        let textMsg = textMessage(number, getMsg("shareLocation"));
-        sendMsgWhatsapp(textMsg);
+        let requestLocation = sendRequestLocation(number,getMsg("shareLocation"))
+        list.push(requestLocation); 
         confirmLanguage = false;
       } else if (detectedAddress) {
         let textMsg = textMessage(number, text);
@@ -277,11 +276,8 @@ async function adminChatbot(text, number, messageId) {
           text.toLowerCase().includes("modify") ||
           text.toLowerCase().includes("modificar")
         ) {
-          let textMessageName = textMessage(
-            number,
-            getMsg("shareLocationAgain")
-          );
-          sendMsgWhatsapp(textMessageName);
+          let requestLocation = sendRequestLocation(number,getMsg("shareLocationAgain"))
+          list.push(requestLocation); 
         } else {
           let body = getMsg("confirmAddressAgain");
           let options = getMsg("optionsList");
